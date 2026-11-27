@@ -1,0 +1,18 @@
+{
+ "D879": {
+  "arm": "bare",
+  "n": 8
+ },
+ "D242": {
+  "arm": "anthropic-frontend-design",
+  "n": 5
+ },
+ "D698": {
+  "arm": "impeccable",
+  "n": 5
+ },
+ "D158": {
+  "arm": "openai-guide-prompt",
+  "n": 8
+ }
+}
