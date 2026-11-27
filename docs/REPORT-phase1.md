@@ -7,7 +7,7 @@
 
 We held one model fixed (gpt-oss-120b on Groq) and swapped only the design guidance: no skill,
 Anthropic's frontend-design skill, impeccable, and a prompt built from OpenAI's frontend guide.
-283 single-file pages across 32 briefs in four constraint tiers, scored with the Phase-0
+307 single-file pages across 32 briefs in four constraint tiers, scored with the Phase-0
 validated tell pack and per-brief computed-CSS assertions.
 
 1. **No skill significantly reduced validated tells** at this sample size (Holm-corrected paired
@@ -48,10 +48,11 @@ contrast is computed there.
 
 | Arm | Pages | Weighted tells, neutral briefs | Weighted tells, all | Adherence | Heading-font entropy | Top heading fonts |
 |---|---|---|---|---|---|---|
-| openai-guide-prompt | 80 | **0.15** | 0.37 | 96.5% | **2.97** (lowest) | Merriweather 31, Playfair 13, Montserrat 9 |
+| openai-guide-prompt | 88 | **0.15** | 0.35 | 96.4% | **2.99** (lowest) | Merriweather 32, Playfair 16, Space Grotesk 9 |
 | impeccable | 60 | 0.35 | 0.38 | 97.5% | 3.25 | Merriweather 16, **Inter 14**, Playfair 6 |
-| anthropic-frontend-design | 60 | 0.59 | 0.28 | 97.5% | 3.14 | Playfair 12, Merriweather 11, **Space Grotesk 10** |
-| bare | 83 | 0.60 | 0.52 | 97.4% | 3.37 (highest) | **Inter 20**, Merriweather 16, Playfair 14 |
+| anthropic-frontend-design | 63 | 0.59 | 0.27 | 97.4% | 3.22 | Playfair 12, Inter 11, Merriweather 11 (Space Grotesk on the Paverly/Tramline pages) |
+| bare | 93 | 0.60 | 0.49 | 97.3% | 3.44 (highest) | **Inter 22**, Merriweather 17, Playfair 17 |
+| hallmark (anecdotal) | 3 | – | 0.62 | 100% | – | Inter 3/3 |
 
 Primary contrasts (neutral tier, skill − bare, negative = fewer tells):
 
@@ -111,9 +112,9 @@ its own (exact sign test p = 0.0625 at n = 5).
 | Arm | Judge sameness S (1 = all different, 5 = one template) | CSS-feature distinctiveness (deterministic, 0–1) |
 |---|---|---|
 | anthropic-frontend-design | **2** | **0.553** |
-| openai-guide-prompt | 4 | 0.401 |
+| openai-guide-prompt | 4 | 0.413 |
 | impeccable | 4 | 0.401 |
-| bare | **5** | **0.303** |
+| bare | **5** | **0.322** |
 
 The deterministic metric (judge/css_distinct.py: heading/body font, background ΔE, scheme,
 tell-set Jaccard, mean pairwise across briefs) reproduces the judge's ordering exactly.
@@ -139,12 +140,13 @@ decoration detectors. This is recorded as the top item for the next version.
 
 ## Limitations
 
-1. **Hallmark arm not completed.** Hallmark's full SKILL.md (~5k tokens) exceeds Groq's
+1. **Hallmark arm partial (3 pages, anecdotal).** Hallmark's full SKILL.md (~5k tokens) exceeds Groq's
    free-tier per-request ceiling (8k TPM counts prompt + max output). We switched to Hallmark's
    own vendor-provided single-shot "floor" pack, but the free-tier daily quota (200k tokens per
-   key per day) was exhausted before those runs completed. 7 pilot pages with the full skill
-   exist and are kept aside, not scored in the comparison.
-2. **Unequal cells:** 60–83 pages per arm (target 96) due to rate limits; impeccable and
+   key per day) was exhausted; a later retry on the rolling quota produced 3 pages (2 neutral
+   briefs, all with Inter headings), shown in the gallery and dataset but excluded from the
+   statistics. 7 pilot pages with the full skill are kept aside, not scored.
+2. **Unequal cells:** 60–93 pages per arm (target 96) due to rate limits; impeccable and
    Anthropic primary contrasts rest on 5 neutral briefs, OpenAI and bare on 8.
 3. **Floor effect on tells** (above) and **ceiling effect on adherence** (~97%): assertions are
    too easy and need harder, brief-specific checks.
