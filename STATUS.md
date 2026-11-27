@@ -115,3 +115,15 @@
 ## Open decisions
 - Whether to re-label a fresh 50-site slice ourselves (fixes drift + gives us an audit set for
   judge calibration).
+
+### Loop 6 — publish + incident (2026-11-27)
+- Published: GitHub ombhojane/design-bench (public), HF dataset ombhojane/design-bench.
+- Incident (caught minutes after first push, fixed before announcement): data/judge was not
+  gitignored, so (a) known-groups judge sheets containing third-party site screenshots and
+  (b) judge composites/sheets containing pages of the 2 held-out NEUTRAL briefs were pushed.
+  Fix: purged data/judge/kg/*.png from all history (filter-branch + gc) and force-pushed;
+  retired hon-1/hon-2 to public_neutral (they were exposed). The 8 directed held-out briefs
+  were never exposed; their sha256 commitment (df2909…) is unchanged. HF export was already
+  filtering both classes and was unaffected.
+- Lesson -> invariant: every publish runs the leak check (held-out ids + third-party images)
+  over the exact file list being pushed, not over a staging copy.
