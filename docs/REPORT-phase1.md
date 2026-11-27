@@ -7,11 +7,11 @@
 
 We held one model fixed (gpt-oss-120b on Groq) and swapped only the design guidance: no skill,
 Anthropic's frontend-design skill, impeccable, and a prompt built from OpenAI's frontend guide.
-307 single-file pages across 32 briefs in four constraint tiers, scored with the Phase-0
+321 single-file pages across 32 briefs in four constraint tiers, scored with the Phase-0
 validated tell pack and per-brief computed-CSS assertions.
 
 1. **No skill significantly reduced validated tells** at this sample size (Holm-corrected paired
-   permutation tests; minimum detectable effect 0.71 weighted points, every observed effect smaller).
+   permutation tests; minimum detectable effect 0.61 weighted points, every observed effect smaller).
 2. **The relocation effect is visible in the fonts.** Bare output defaults to Inter (20 pages);
    the OpenAI guide moves the default to Merriweather (31 of 80 pages) and *lowers* heading-font
    entropy (3.37 → 2.97 bits); Anthropic's skill introduces Space Grotesk (10 pages), the exact
@@ -48,21 +48,21 @@ contrast is computed there.
 
 | Arm | Pages | Weighted tells, neutral briefs | Weighted tells, all | Adherence | Heading-font entropy | Top heading fonts |
 |---|---|---|---|---|---|---|
-| openai-guide-prompt | 88 | **0.15** | 0.35 | 96.4% | **2.99** (lowest) | Merriweather 32, Playfair 16, Space Grotesk 9 |
-| impeccable | 60 | 0.35 | 0.38 | 97.5% | 3.25 | Merriweather 16, **Inter 14**, Playfair 6 |
-| anthropic-frontend-design | 63 | 0.59 | 0.27 | 97.4% | 3.22 | Playfair 12, Inter 11, Merriweather 11 (Space Grotesk on the Paverly/Tramline pages) |
-| bare | 93 | 0.60 | 0.49 | 97.3% | 3.44 (highest) | **Inter 22**, Merriweather 17, Playfair 17 |
+| openai-guide-prompt | 95 | **0.24** | 0.37 | 96.5% | **2.91** (lowest) | **Merriweather 37**, Playfair 16, Montserrat 11 |
+| impeccable | 62 | 0.25 | 0.35 | 97.7% | 3.24 | Merriweather 16, **Inter 15**, Roboto 6 |
+| bare | 96 | 0.52 | 0.47 | 98.0% | 3.39 (highest) | **Inter 25**, Merriweather 17, Playfair 17 |
+| anthropic-frontend-design | 65 | 0.81 | 0.34 | 97.5% | 3.27 | Playfair 12, **Space Grotesk 11**, Inter 11 |
 | hallmark (anecdotal) | 3 | – | 0.62 | 100% | – | Inter 3/3 |
 
 Primary contrasts (neutral tier, skill − bare, negative = fewer tells):
 
 | Arm | Diff ± SE | p | p (Holm) | n briefs |
 |---|---|---|---|---|
-| openai-guide-prompt | −0.45 ± 0.23 | 0.125 | 0.375 | 8 |
-| impeccable | −0.23 ± 0.22 | 0.500 | 1.000 | 5 |
-| anthropic-frontend-design | +0.02 ± 0.29 | 1.000 | 1.000 | 5 |
+| impeccable | −0.35 ± 0.22 | 0.250 | 0.500 | 7 |
+| openai-guide-prompt | −0.28 ± 0.11 | 0.125 | 0.375 | 8 |
+| anthropic-frontend-design | +0.12 ± 0.26 | 0.688 | 0.688 | 6 |
 
-MDE (paired, Holm α, power 0.8): **0.71** weighted points. Differences below that are noise
+MDE (paired, Holm α, power 0.8): **0.61** weighted points. Differences below that are noise
 at this sample size. The OpenAI-guide direction is the most promising and the most worth
 re-testing with more briefs.
 
@@ -111,10 +111,10 @@ its own (exact sign test p = 0.0625 at n = 5).
 
 | Arm | Judge sameness S (1 = all different, 5 = one template) | CSS-feature distinctiveness (deterministic, 0–1) |
 |---|---|---|
-| anthropic-frontend-design | **2** | **0.553** |
-| openai-guide-prompt | 4 | 0.413 |
-| impeccable | 4 | 0.401 |
-| bare | **5** | **0.322** |
+| anthropic-frontend-design | **2** | **0.528** |
+| openai-guide-prompt | 4 | 0.420 |
+| impeccable | 4 | 0.402 |
+| bare | **5** | **0.298** |
 
 The deterministic metric (judge/css_distinct.py: heading/body font, background ΔE, scheme,
 tell-set Jaccard, mean pairwise across briefs) reproduces the judge's ordering exactly.
@@ -146,7 +146,7 @@ decoration detectors. This is recorded as the top item for the next version.
    key per day) was exhausted; a later retry on the rolling quota produced 3 pages (2 neutral
    briefs, all with Inter headings), shown in the gallery and dataset but excluded from the
    statistics. 7 pilot pages with the full skill are kept aside, not scored.
-2. **Unequal cells:** 60–93 pages per arm (target 96) due to rate limits; impeccable and
+2. **Unequal cells:** 62–96 pages per arm (target 96) due to rate limits; impeccable and
    Anthropic primary contrasts rest on 5 neutral briefs, OpenAI and bare on 8.
 3. **Floor effect on tells** (above) and **ceiling effect on adherence** (~97%): assertions are
    too easy and need harder, brief-specific checks.
