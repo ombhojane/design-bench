@@ -1,0 +1,32 @@
+{
+ "bare": {
+  "file": "data/arms/bare.txt",
+  "chars": 49,
+  "sha256": "90b249a2d0895237",
+  "provenance": "control arm"
+ },
+ "anthropic-frontend-design": {
+  "file": "data/arms/anthropic-frontend-design.txt",
+  "chars": 9432,
+  "sha256": "7f3da1759c29d50b",
+  "provenance": "anthropics/skills frontend-design SKILL.md, Apache-2.0, verbatim"
+ },
+ "hallmark": {
+  "file": "data/arms/hallmark.txt",
+  "chars": 18124,
+  "sha256": "ee3e255508595ef5",
+  "provenance": "Nutlope/hallmark skills/hallmark/SKILL.md, MIT, verbatim (SKILL.md only, no references/)"
+ },
+ "impeccable": {
+  "file": "data/arms/impeccable.txt",
+  "chars": 13075,
+  "sha256": "73abc9d2e9309e0d",
+  "provenance": "pbakaus/impeccable skill/SKILL.src.md @2.3.2, Apache-2.0, verbatim"
+ },
+ "openai-guide-prompt": {
+  "file": "data/arms/openai-guide-prompt.txt",
+  "chars": 1437,
+  "sha256": "ad6d806f5a50e04d",
+  "provenance": "paraphrase of developers.openai.com frontend guidance (GPT-5.4 blog + frontend prompt doc); not verbatim"
+ }
+}

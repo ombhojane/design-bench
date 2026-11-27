@@ -8,3 +8,8 @@ data/phase0/tranco-results/
 data/phase0/awwwards-results/
 data/phase0/kombai/
 .env
+data/briefs/held-out.jsonl
+data/briefs/held-out-neutral.jsonl
+data/phase1/gen/
+data/phase1/pilot-results/
+data/briefs/all-briefs.jsonl
