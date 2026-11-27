@@ -73,7 +73,7 @@ def call_groq(ring: KeyRing, model: str, system: str, user: str,
     body = {
         "model": model,
         "temperature": temperature,
-        "max_completion_tokens": 32768,
+        "max_completion_tokens": max(2000, 7900 - (len(system) + len(user)) // 4),  # Groq free tier: prompt+cap <= 8k TPM
         "stream": True,  # the filtering proxy truncates big buffered bodies; SSE passes
         "stream_options": {"include_usage": True},
         "messages": ([{"role": "system", "content": system}] if system else [])

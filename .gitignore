@@ -13,3 +13,6 @@ data/briefs/held-out-neutral.jsonl
 data/phase1/gen/
 data/phase1/pilot-results/
 data/briefs/all-briefs.jsonl
+data/phase1/scan/
+data/phase1/assertions/
+data/phase1/gen-hallmark-fullpack/

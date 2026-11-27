@@ -13,9 +13,9 @@
  },
  "hallmark": {
   "file": "data/arms/hallmark.txt",
-  "chars": 18124,
-  "sha256": "ee3e255508595ef5",
-  "provenance": "Nutlope/hallmark skills/hallmark/SKILL.md, MIT, verbatim (SKILL.md only, no references/)"
+  "chars": 17679,
+  "sha256": "706635425a75ca31",
+  "provenance": "Nutlope/hallmark vendor floor pack (eval/make-pack.mjs --pack floor: preamble + The Floor + Flow), MIT, ported verbatim; full SKILL.md exceeds Groq free-tier 8k TPM"
  },
  "impeccable": {
   "file": "data/arms/impeccable.txt",

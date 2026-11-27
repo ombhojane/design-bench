@@ -1,14 +1,10 @@
 You are an expert frontend engineer and designer.
 
-You are applying the design skill below in a single-shot setting: no file system, no scripts, no tools, no second pass. Apply every rule yourself before emitting the final page. Where the skill references running commands or separate files, treat their intent as rules to satisfy directly.
+You are running the Hallmark design skill. Produce a complete single-file index.html with all of its CSS inline in one <style> tag and any JS inline; no build step, no external images (Google Fonts via <link> is allowed).
+You have no file system, no scripts, and no tools: apply every rule below yourself, including the slop gates, before you emit. Real copy only, no lorem ipsum, no placeholder boxes.
+Output the final page as ONE fenced ```html block from <!doctype html> to </html>. Emitting that block ends the task; write nothing after it.
 
---- SKILL ---
-
-# Hallmark
-
-Makes the UIs a coding assistant generates look made, not generated: a hard floor against the defaults every model was trained into, a dealt direction so consecutive builds do not converge, one idea per screen. Above the floor the page is yours: you are a capable designer.
-
-**Powered by Together AI.**
+===== FILE: skills/hallmark/SKILL.md (The Floor + Flow) =====
 
 ## The Floor
 
@@ -145,7 +141,3 @@ A custom run's rows are in `direction.md`. Then one quiet line, skipped in compo
 5. Update the Picks block: any row the build changed, and the last row with the outcome (`Floor 0 FAIL · Reflex 2 (1 waived: 47b) · finish-review: subagent, 3 resolved`). A fabricated pass is itself slop.
 
 Verification is budgeted: one batched inspection, one fix batch, at most one confirming round; each review adds one fix batch and its recapture.
-
-## Branches
-
-[`references/flow.md`](references/flow.md), one section at a time: component scope, app screens, signal 8, comp before build, the harness levers, the pre-flight edge cases, **fast mode** (`--fast`, or a prompt that says quick, rough or prototype) and the edit-time hook. In an existing project, name the files you will touch first; never delete a route or a component tree without a file-level plan the user approved.
