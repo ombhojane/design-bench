@@ -1,0 +1,10 @@
+{
+ "judge": "claude-opus-5-5 (interactive session)",
+ "question": "Sameness S 1-5 across one arm's pages for different neutral briefs (1 = all different, 5 = one template re-skinned)",
+ "ratings": {
+  "D158": {"S": 4, "devices": "full-bleed flat grey/tinted hero band; centered serif or Montserrat title; one small teal/red button; 'How it works' with three tiny grey squares"},
+  "D242": {"S": 2, "devices": "clearly different palettes and layouts (yellow gradient placeholder, teal+cream, dark navy, terracotta circle logo, blue-coral gradient); shared habit: numbered circle/square steps"},
+  "D698": {"S": 4, "devices": "solid colored header band with centered title; blue/coral CTA; 3-4 white cards 'How It Works'; grey photo circles"},
+  "D879": {"S": 5, "devices": "centered hero or colored band + Inter + blue button; three grey placeholder cards under 'How It Works' on most pages; blue gradient hero repeats"}
+ }
+}

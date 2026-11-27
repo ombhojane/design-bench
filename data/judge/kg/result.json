@@ -1,0 +1,21 @@
+{
+ "means": {
+  "ceiling": 1.25,
+  "ai": 4.166666666666667,
+  "ordinary": 2.7777777777777777
+ },
+ "n": {
+  "ceiling": 8,
+  "ai": 12,
+  "ordinary": 9
+ },
+ "nulls": {
+  "ordinary": 3,
+  "ceiling": 4,
+  "ai": 0
+ },
+ "auc_ai_vs_human": 1.0,
+ "auc_ai_vs_ceiling": 1.0,
+ "auc_ai_vs_ordinary": 1.0,
+ "ordering_ok": true
+}
