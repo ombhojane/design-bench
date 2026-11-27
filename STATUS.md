@@ -1,6 +1,6 @@
 # STATUS
 
-- Owner: Nikhil (with Claude)
+- Owner: ombhojane (with Claude)
 - State: Phase 0, Loop 2 done — vendored 14-detector suite runs via Python Playwright and is
   validated against the 190-site slop-cop label set.
 - Live board: none yet.
