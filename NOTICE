@@ -1,0 +1,8 @@
+OB-Design-Slop
+
+Code: MIT (c) 2026 Nikhil
+
+Bundled third-party work:
+- tells/vendor/slopcop/** — design-slop-cop, (c) Adrian Krebs, MIT. Unmodified. https://github.com/AdrianKrebs/design-slop-cop
+- data/phase0/kombai/** and kombai-results — rendered designs from Kombai Design Creativity Bench, MIT. https://github.com/kombai-io/design-creativity-bench
+- Statistical method references in docs/METHOD.md

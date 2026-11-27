@@ -1,0 +1,10 @@
+.venv/
+.browsers/
+__pycache__/
+*.pyc
+data/phase0/results/
+data/phase0/kombai-results/
+data/phase0/tranco-results/
+data/phase0/awwwards-results/
+data/phase0/kombai/
+.env
