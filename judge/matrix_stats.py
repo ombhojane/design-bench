@@ -70,6 +70,9 @@ def main() -> None:
     ap.add_argument("--briefs", required=True)
     ap.add_argument("--tells", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--gen", default="data/phase1/gen", help="generation metadata dir (for the model filter)")
+    ap.add_argument("--model", default="openai/gpt-oss-120b",
+                    help="only score pages made by this model; 'any' disables the filter")
     args = ap.parse_args()
 
     briefs = {b["id"]: b for b in
@@ -86,6 +89,11 @@ def main() -> None:
         brief_id, arm, seed = r["slug"].split("__")
         if brief_id not in briefs:
             continue
+        if args.model != "any":
+            mf = Path(args.gen) / f"{r['slug']}.json"
+            made_by = json.loads(mf.read_text()).get("model") if mf.exists() else None
+            if made_by != args.model:
+                continue
         trig = [p["id"] for p in r["patterns"] if p["triggered"] and p["id"] in weights]
         af = Path(args.assertions) / f"{r['slug']}.json"
         adh = json.loads(af.read_text())["adherence"] if af.exists() else None

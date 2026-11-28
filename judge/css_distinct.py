@@ -33,17 +33,22 @@ def lab(rgb: str):
     return (116 * Y - 16, 500 * (X - Y), 200 * (Y - Z))
 
 
-def main() -> None:
+def main(scan_dir: str = "data/phase1/scan/raw", gen_dir: str = "data/phase1/gen",
+         model: str = "openai/gpt-oss-120b", out_path: str = "board/phase1-css-distinctiveness.json") -> None:
     briefs = [json.loads(l) for l in (ROOT / "data/briefs/all-briefs.jsonl").read_text().splitlines() if l.strip()]
     neutral = {b["id"] for b in briefs if b["group"] == "neutral"}
     by_arm_seed = defaultdict(lambda: defaultdict(dict))
-    for f in (ROOT / "data/phase1/scan/raw").glob("*.json"):
+    for f in (ROOT / scan_dir).glob("*.json"):
         r = json.loads(f.read_text())
         if r.get("error"):
             continue
         brief, arm, seed = r["slug"].split("__")
         if brief not in neutral:
             continue
+        if model != "any":
+            mf = ROOT / gen_dir / f"{r['slug']}.json"
+            if not mf.exists() or json.loads(mf.read_text()).get("model") != model:
+                continue
         fonts = r.get("fonts") or {}
         top = (fonts.get("topFonts") or [{}])[0].get("name")
         by_arm_seed[arm][seed][brief] = {
@@ -68,8 +73,16 @@ def main() -> None:
     print(f"{'arm':28s} distinctiveness (0=identical, 1=all differ)   pairs")
     for arm, v in sorted(out.items(), key=lambda x: -x[1]["mean_pairwise_distance"]):
         print(f"{arm:28s} {v['mean_pairwise_distance']:.3f}                                   {v['pairs']}")
-    (ROOT / "board/phase1-css-distinctiveness.json").write_text(json.dumps(out, indent=1))
+    (ROOT / out_path).write_text(json.dumps(out, indent=1))
+    return out
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--scan", default="data/phase1/scan/raw")
+    ap.add_argument("--gen", default="data/phase1/gen")
+    ap.add_argument("--model", default="openai/gpt-oss-120b")
+    ap.add_argument("--out", default="board/phase1-css-distinctiveness.json")
+    a = ap.parse_args()
+    main(a.scan, a.gen, a.model, a.out)

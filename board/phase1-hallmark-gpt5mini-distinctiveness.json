@@ -1,0 +1,10 @@
+{
+ "hallmark": {
+  "mean_pairwise_distance": 0.445,
+  "pairs": 37
+ },
+ "bare": {
+  "mean_pairwise_distance": 0.269,
+  "pairs": 84
+ }
+}

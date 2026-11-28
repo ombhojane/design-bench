@@ -20,3 +20,6 @@ gallery.html
 data/judge/kg/*.png
 site/
 data/briefs/fill-order.jsonl
+data/briefs/neutral-all.jsonl
+data/phase1/scan-control/
+data/phase1/gen-control-gpt5mini/

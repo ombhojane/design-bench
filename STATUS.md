@@ -127,3 +127,16 @@
   filtering both classes and was unaffected.
 - Lesson -> invariant: every publish runs the leak check (held-out ids + third-party images)
   over the exact file list being pushed, not over a staging copy.
+
+### Loop 7 — complete the 480-page matrix (2026-11-28)
+- Groq fill (neutral-first order): +75 gpt-oss pages; then Groq TPD exhausted on all 5 keys.
+  Hallmark's ~5k-token prompt also hit the 8k per-request cap (7 truncated outputs).
+- OpenAI does not host gpt-oss (404). User chose gpt-5-mini for the remaining 84 pages
+  (76 hallmark, 5 impeccable, 3 anthropic) + a 24-page same-model no-skill baseline on the
+  8 neutral briefs. generate.py gained --provider openai. Actual spend: $1.60.
+- Stats are now model-aware (matrix_stats/css_distinct --model; default gpt-oss = primary board).
+- New result: on gpt-5-mini, Hallmark cuts validated tells 4.93 -> 2.18 (exact p = 0.0078,
+  8/8 briefs) and raises distinctiveness 0.27 -> 0.45. gpt-5-mini's default is decorated slop;
+  gpt-oss's is bland slop. Skill effect depends on the model's defaults.
+- Boards: board/phase1-skill-board.json (gpt-oss), board/phase1-css-distinctiveness.json,
+  board/phase1-hallmark-gpt5mini.json, board/phase1-hallmark-gpt5mini-distinctiveness.json.

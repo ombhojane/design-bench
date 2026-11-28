@@ -23,6 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ARMS_DIR = ROOT / "data" / "arms"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+OPENAI_ENV = ROOT.parent.parent / "omisaur" / ".env"
 
 CONTRACT = """
 Build this as ONE complete, self-contained index.html:
@@ -42,6 +44,13 @@ def load_keys() -> list[str]:
     if not keys:
         raise SystemExit("no groq keys in ../.env")
     return keys
+
+
+def load_openai_key() -> str:
+    for line in OPENAI_ENV.read_text().splitlines():
+        if line.strip().startswith("OPENAI_API_KEY="):
+            return line.split("=", 1)[1].strip().strip('"')
+    raise SystemExit("no OPENAI_API_KEY in " + str(OPENAI_ENV))
 
 
 class KeyRing:
@@ -69,21 +78,30 @@ def extract_html(text: str) -> str | None:
 
 
 def call_groq(ring: KeyRing, model: str, system: str, user: str,
-              temperature: float, max_retries: int = 6) -> dict:
+              temperature: float, max_retries: int = 6, provider: str = "groq",
+              reasoning_effort: str | None = None) -> dict:
     body = {
         "model": model,
-        "temperature": temperature,
-        "max_completion_tokens": max(2000, 7900 - (len(system) + len(user)) // 4),  # Groq free tier: prompt+cap <= 8k TPM
         "stream": True,  # the filtering proxy truncates big buffered bodies; SSE passes
         "stream_options": {"include_usage": True},
         "messages": ([{"role": "system", "content": system}] if system else [])
                     + [{"role": "user", "content": user}],
     }
+    if provider == "groq":
+        body["temperature"] = temperature
+        body["max_completion_tokens"] = max(2000, 7900 - (len(system) + len(user)) // 4)  # Groq free tier: prompt+cap <= 8k TPM
+        url = GROQ_URL
+    else:
+        # gpt-5-family reasoning models accept only the default temperature (1.0).
+        body["max_completion_tokens"] = 16000
+        if reasoning_effort:
+            body["reasoning_effort"] = reasoning_effort
+        url = OPENAI_URL
     last = None
     for attempt in range(max_retries):
         key = ring.next()
         req = urllib.request.Request(
-            GROQ_URL, data=json.dumps(body).encode(),
+            url, data=json.dumps(body).encode(),
             headers={"Authorization": "Bearer " + key,
                      "Content-Type": "application/json",
                      "Accept": "text/event-stream",
@@ -137,6 +155,8 @@ def main() -> None:
     ap.add_argument("--temperature", type=float, default=0.8)
     ap.add_argument("--limit", type=int, help="max generations this run (pilot)")
     ap.add_argument("--concurrency", type=int, default=3)
+    ap.add_argument("--provider", choices=["groq", "openai"], default="groq")
+    ap.add_argument("--reasoning-effort", choices=["minimal", "low", "medium", "high"])
     args = ap.parse_args()
 
     briefs = [json.loads(l) for l in Path(args.briefs).read_text().splitlines() if l.strip()]
@@ -145,7 +165,7 @@ def main() -> None:
     pack_manifest = json.loads((ARMS_DIR / "manifest.json").read_text())
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    ring = KeyRing(load_keys())
+    ring = KeyRing(load_keys() if args.provider == "groq" else [load_openai_key()])
 
     jobs = []
     for b in briefs:
@@ -164,11 +184,13 @@ def main() -> None:
     def run(job):
         b, arm, seed, name = job
         user = f"Client brief — {b['title']} ({b['sector']}):\n\n{b['brief']}\n{CONTRACT}"
-        d = call_groq(ring, args.model, packs[arm], user, args.temperature)
+        d = call_groq(ring, args.model, packs[arm], user, args.temperature,
+                      provider=args.provider, reasoning_effort=args.reasoning_effort)
         meta = {"name": name, "brief": b["id"], "arm": arm, "seed": seed,
-                "model": args.model,
+                "model": args.model, "provider": args.provider,
                 "pack_sha": pack_manifest.get(arm, {}).get("sha256"),
-                "temperature": args.temperature}
+                "temperature": args.temperature if args.provider == "groq" else 1.0,
+                "reasoning_effort": args.reasoning_effort}
         if "_error" in d:
             meta["error"] = d["_error"]
         else:
