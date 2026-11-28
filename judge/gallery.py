@@ -75,141 +75,109 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
     arms = [a for a in ARMS if coverage[a] >= len(briefs) / 2]
     left_out = [a for a in ARMS if a not in arms and coverage[a] > 0]
 
-    sections, n_pages = [], 0
+    rows, n_pages = [], 0
     for b in briefs:
-        cards = []
+        cells = []
         for arm in arms:
             seeds = [page_info(f"{b['id']}__{arm}__s{s}") for s in (1, 2, 3)]
             seeds = [s for s in seeds if s]
             n_pages += len(seeds)
             if not seeds:
-                cards.append(f'<div class="card empty"><h3>{e(ARM_LABEL[arm])}</h3><p class="none">Not generated</p></div>')
+                cells.append('<td class="empty"><span>Not generated</span></td>')
                 continue
-            first = seeds[0]
-            data = e(json.dumps(seeds))
-            switch = "".join(f'<button type="button" data-i="{i}"{" aria-pressed=\"true\"" if i == 0 else ""}>{i + 1}</button>'
-                             for i in range(len(seeds))) if len(seeds) > 1 else ""
-            tell_txt = ", ".join(first["tells"]) if first["tells"] else "None found"
-            met = f'{first["met"]} of {first["of"]}' if first["met"] is not None else "n/a"
-            cards.append(
-                f'<div class="card" data-seeds="{data}" data-tells="{len(first["tells"])}">'
-                f'<div class="cardhead"><h3>{e(ARM_LABEL[arm])}</h3>'
-                f'{"<span class=\"switch\" aria-label=\"Attempt\">" + switch + "</span>" if switch else ""}</div>'
-                f'<button type="button" class="shot" aria-label="View {e(ARM_LABEL[arm])} page larger">'
-                f'<img loading="lazy" src="{first["img"]}" alt="{e(b["title"])}, {e(ARM_LABEL[arm])}"></button>'
-                f'<dl><dt>Heading font</dt><dd class="f">{e(first["font"])}</dd>'
-                f'<dt>Brief requirements met</dt><dd class="m">{met}</dd>'
-                f'<dt>Giveaways</dt><dd class="t{"" if first["tells"] else " clean"}">{e(tell_txt)}</dd></dl>'
-                f'<a class="open" href="{first["href"]}" target="_blank" rel="noopener">Open the page</a></div>')
-        sections.append(
-            f'<section class="brief" data-type="{b["group"]}" id="{b["id"]}">'
-            f'<div class="briefhead"><h2>{e(b["title"])}</h2>'
-            f'<p class="type">{TYPE_LABEL.get(b["group"], b["group"])} · {e(b["sector"])}</p>'
-            f'<p class="text">{e(b["brief"])}</p></div>'
-            f'<div class="cards" style="--n:{len(arms)}">{"".join(cards)}</div></section>')
+            f = seeds[0]
+            nt = len(f["tells"])
+            gv = "no giveaways" if nt == 0 else f"{nt} giveaway{'s' if nt > 1 else ''}"
+            cells.append(
+                f'<td data-tells="{nt}"><button type="button" class="th" data-seeds="{e(json.dumps(seeds))}" '
+                f'data-title="{e(b["title"])}" data-arm="{e(ARM_LABEL[arm])}" aria-label="{e(b["title"])}, {e(ARM_LABEL[arm])}">'
+                f'<img loading="lazy" src="{f["img"]}" alt=""></button>'
+                f'<span class="m">{e(f["font"])} · <span class="{"ok" if nt == 0 else "bad"}">{gv}</span></span></td>')
+        rows.append(
+            f'<tr data-type="{b["group"]}"><th scope="row"><span class="bt" title="{e(b["brief"])}">{e(b["title"])}</span>'
+            f'<span class="ty">{TYPE_LABEL.get(b["group"], b["group"])}</span></th>{"".join(cells)}</tr>')
 
     note = ""
     if left_out:
         names = ", ".join(f"{ARM_LABEL[a]} ({coverage[a]} briefs)" for a in left_out)
-        note = f'<p class="note">Not shown because they cover too few briefs: {e(names)}.</p>'
-
+        note = f" Not shown, too few pages: {e(names)}."
     filters = "".join(f'<button type="button" data-f="{k}">{v}</button>' for k, v in TYPE_LABEL.items())
-    legend = "".join(f"<li><b>{v}</b>: {TYPE_HELP[k]}</li>" for k, v in TYPE_LABEL.items())
+    head = "".join(f"<th scope=\"col\">{e(ARM_LABEL[a])}</th>" for a in arms)
 
     out = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>design-bench: every page, brief by brief</title>
-<meta name="description" content="Every page one AI model built for 24 website briefs under four sets of design instructions, side by side.">
+<title>design-bench: every page</title>
+<meta name="description" content="Every page one AI model built for 24 website briefs under four sets of design instructions.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {{ color-scheme: light; --bg:#fcfcfb; --ink:#141413; --ink2:#52514e; --ink3:#77766f; --line:#e4e2dc; --soft:#f3f2ee; --card:#ffffff; --link:#1c5cab; --warn:#a34a1f; --ok:#2f6b3a; }}
-@media (prefers-color-scheme: dark) {{ :root:where(:not([data-theme="light"])) {{ color-scheme: dark; --bg:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --ink3:#9a988f; --line:#34332f; --soft:#232321; --card:#21211f; --link:#86b6ef; --warn:#e8946b; --ok:#8fc59a; }} }}
-:root[data-theme="dark"] {{ color-scheme: dark; --bg:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --ink3:#9a988f; --line:#34332f; --soft:#232321; --card:#21211f; --link:#86b6ef; --warn:#e8946b; --ok:#8fc59a; }}
+:root {{ color-scheme: light; --bg:#fcfcfb; --ink:#141413; --ink2:#52514e; --ink3:#77766f; --line:#e4e2dc; --soft:#f3f2ee; --card:#ffffff; --link:#1c5cab; --bad:#a34a1f; --ok:#2f6b3a; }}
+@media (prefers-color-scheme: dark) {{ :root:where(:not([data-theme="light"])) {{ color-scheme: dark; --bg:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --ink3:#9a988f; --line:#34332f; --soft:#232321; --card:#21211f; --link:#86b6ef; --bad:#e8946b; --ok:#8fc59a; }} }}
+:root[data-theme="dark"] {{ color-scheme: dark; --bg:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --ink3:#9a988f; --line:#34332f; --soft:#232321; --card:#21211f; --link:#86b6ef; --bad:#e8946b; --ok:#8fc59a; }}
 * {{ box-sizing:border-box; }}
 html {{ -webkit-text-size-adjust:100%; }}
-body {{ margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 "Source Serif 4", Georgia, serif; }}
-.top {{ max-width:760px; margin:0 auto; padding:48px 20px 8px; }}
-.back {{ font:15px/1.4 "IBM Plex Sans", system-ui, sans-serif; margin:0 0 22px; }}
+body {{ margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 "IBM Plex Sans", system-ui, sans-serif; }}
+header {{ max-width:1400px; margin:0 auto; padding:28px 20px 14px; }}
 a {{ color:var(--link); }}
-h1 {{ font-size:38px; line-height:1.15; margin:0 0 12px; font-weight:600; }}
-.dek {{ font-size:20px; line-height:1.5; color:var(--ink2); margin:0 0 18px; }}
-.howto {{ font:15px/1.6 "IBM Plex Sans", system-ui, sans-serif; color:var(--ink2); margin:0 0 6px; }}
-.howto ul {{ margin:6px 0 0; padding-left:20px; }}
-.note {{ font:14px/1.5 "IBM Plex Sans", system-ui, sans-serif; color:var(--ink3); }}
-.bar {{ position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); }}
-.barin {{ max-width:1280px; margin:0 auto; padding:12px 20px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; font:14px/1 "IBM Plex Sans", system-ui, sans-serif; }}
-.barin button {{ font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:4px; padding:8px 12px; cursor:pointer; }}
-.barin button[aria-pressed="true"] {{ border-color:var(--ink); background:var(--soft); }}
-.barin .sep {{ width:1px; height:22px; background:var(--line); margin:0 4px; }}
-.count {{ color:var(--ink3); margin-left:auto; }}
-main {{ max-width:1280px; margin:0 auto; padding:8px 20px 80px; }}
-section.brief {{ padding:40px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:64px; }}
-.briefhead {{ max-width:760px; }}
-h2 {{ font-size:26px; line-height:1.25; margin:0 0 4px; font-weight:600; }}
-.type {{ font:14px/1.5 "IBM Plex Sans", system-ui, sans-serif; color:var(--ink3); margin:0 0 10px; }}
-.text {{ font-size:16px; color:var(--ink2); margin:0 0 22px; }}
-.cards {{ display:grid; grid-template-columns:repeat(var(--n), minmax(0, 1fr)); gap:18px; margin-bottom:32px; }}
-.card {{ font:14px/1.45 "IBM Plex Sans", system-ui, sans-serif; min-width:0; }}
-.cardhead {{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 8px; }}
-h3 {{ font:500 15px/1.3 "IBM Plex Sans", system-ui, sans-serif; margin:0; }}
-.switch {{ display:flex; gap:4px; }}
-.switch button {{ font:13px/1 "IBM Plex Sans", system-ui, sans-serif; color:var(--ink2); background:none; border:1px solid var(--line); border-radius:3px; width:26px; height:24px; cursor:pointer; }}
-.switch button[aria-pressed="true"] {{ color:var(--ink); border-color:var(--ink2); }}
-.shot {{ display:block; width:100%; padding:0; border:1px solid var(--line); border-radius:4px; overflow:hidden; background:var(--soft); cursor:zoom-in; }}
-.shot:hover {{ border-color:var(--ink2); }}
-.shot img {{ display:block; width:100%; aspect-ratio:1440/900; object-fit:cover; object-position:top; }}
-dl {{ display:grid; grid-template-columns:auto 1fr; gap:2px 10px; margin:10px 0 6px; }}
-dt {{ color:var(--ink3); }} dd {{ margin:0; color:var(--ink); }}
-dd.t {{ color:var(--warn); }} dd.t.clean {{ color:var(--ok); }}
-.open {{ font-size:14px; }}
-.card.empty .none {{ color:var(--ink3); border:1px dashed var(--line); border-radius:4px; aspect-ratio:1440/900; display:flex; align-items:center; justify-content:center; margin:0; }}
-.dim .card[data-tells="0"] {{ opacity:.25; }}
-dialog {{ border:0; padding:0; max-width:min(1200px, 94vw); background:var(--card); color:var(--ink); border-radius:6px; }}
-dialog::backdrop {{ background:rgba(0,0,0,.7); }}
+h1 {{ font:600 28px/1.2 "Source Serif 4", Georgia, serif; margin:6px 0 6px; }}
+.lede {{ color:var(--ink2); margin:0 0 14px; max-width:860px; }}
+.filters {{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }}
+.filters button {{ font:inherit; font-size:13px; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:4px; padding:6px 10px; cursor:pointer; }}
+.filters button[aria-pressed="true"] {{ border-color:var(--ink); background:var(--soft); }}
+.wrap {{ overflow-x:auto; padding:0 20px 60px; max-width:1400px; margin:0 auto; }}
+table {{ border-collapse:separate; border-spacing:10px 0; min-width:900px; width:100%; table-layout:fixed; }}
+thead th {{ position:sticky; top:0; z-index:2; background:var(--bg); text-align:left; font-weight:500; color:var(--ink2); padding:10px 0 8px; border-bottom:1px solid var(--line); }}
+thead th:first-child {{ width:170px; }}
+tbody th {{ text-align:left; vertical-align:top; font-weight:normal; padding:12px 0; }}
+.bt {{ display:block; font-weight:500; color:var(--ink); cursor:help; }}
+.ty {{ display:block; color:var(--ink3); font-size:12px; margin-top:2px; }}
+td {{ vertical-align:top; padding:12px 0; }}
+.th {{ display:block; width:100%; padding:0; border:1px solid var(--line); border-radius:3px; overflow:hidden; background:var(--soft); cursor:zoom-in; }}
+.th:hover {{ border-color:var(--ink2); }}
+.th img {{ display:block; width:100%; aspect-ratio:1440/900; object-fit:cover; object-position:top; }}
+.m {{ display:block; font-size:12px; color:var(--ink3); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+.ok {{ color:var(--ok); }} .bad {{ color:var(--bad); }}
+td.empty span {{ display:flex; align-items:center; justify-content:center; aspect-ratio:1440/900; border:1px dashed var(--line); border-radius:3px; color:var(--ink3); font-size:12px; }}
+.dim td[data-tells="0"] {{ opacity:.2; }}
+dialog {{ border:0; padding:0; width:min(1200px, 94vw); background:var(--card); color:var(--ink); border-radius:6px; }}
+dialog::backdrop {{ background:rgba(0,0,0,.72); }}
 dialog img {{ display:block; width:100%; height:auto; }}
-.dlgbar {{ display:flex; justify-content:space-between; gap:12px; padding:12px 16px; font:14px/1.4 "IBM Plex Sans", system-ui, sans-serif; }}
-.dlgbar button {{ font:inherit; color:var(--ink); background:none; border:1px solid var(--line); border-radius:4px; padding:6px 10px; cursor:pointer; }}
-@media (max-width: 1000px) {{ .cards {{ grid-template-columns:repeat(2, minmax(0, 1fr)); }} }}
-@media (max-width: 560px) {{ .cards {{ grid-template-columns:1fr; }} h1 {{ font-size:30px; }} .dek {{ font-size:18px; }}
-  .barin {{ flex-wrap:nowrap; overflow-x:auto; padding:10px 16px; }} .barin button {{ flex:0 0 auto; white-space:nowrap; }} .count {{ flex:0 0 auto; margin-left:8px; }} .barin .sep {{ flex:0 0 1px; }} }}
+.dbar {{ display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; padding:12px 16px; font-size:14px; }}
+.dbar .t {{ font-weight:500; margin-right:auto; }}
+.dbar button {{ font:inherit; color:var(--ink); background:none; border:1px solid var(--line); border-radius:4px; padding:5px 10px; cursor:pointer; }}
+.dbar button[aria-pressed="true"] {{ border-color:var(--ink2); background:var(--soft); }}
+.dmeta {{ padding:0 16px 14px; font-size:13px; color:var(--ink2); }}
 </style></head>
 <body>
-<div class="top">
-<p class="back"><a href="./">← Findings and method</a></p>
-<h1>Every page, brief by brief</h1>
-<p class="dek">One model built each website three times under each set of design instructions. Pick a brief and compare what each skill produced.</p>
-<div class="howto">Use the number buttons to switch between the three attempts, and click a screenshot to see it full size. Giveaways are the AI-design habits our detectors found on that page. The briefs come in four kinds:
-<ul>{legend}</ul></div>
-{note}
-</div>
-<div class="bar"><div class="barin" role="toolbar" aria-label="Filter briefs">
-<button type="button" data-f="all" aria-pressed="true">All briefs</button>{filters}
-<span class="sep"></span><button type="button" id="dim" aria-pressed="false">Fade pages without giveaways</button>
-<span class="count" id="count"></span></div></div>
-<main>{''.join(sections)}</main>
-<dialog id="dlg"><img id="dlgimg" alt=""><div class="dlgbar"><a id="dlgopen" href="#" target="_blank" rel="noopener">Open the live page</a><button type="button" id="dlgclose">Close</button></div></dialog>
+<header>
+<a href="./">← Findings and method</a>
+<h1>Every page</h1>
+<p class="lede">Each row is one website brief and each column one set of design instructions. Thumbnails show the first of three attempts; click one to see it full size and flip through all three. Hover a brief's name to read it.{note}</p>
+<div class="filters" role="toolbar" aria-label="Filter"><button type="button" data-f="all" aria-pressed="true">All briefs</button>{filters}<button type="button" id="dim" aria-pressed="false">Fade pages with no giveaways</button></div>
+</header>
+<div class="wrap"><table><thead><tr><th scope="col">Brief</th>{head}</tr></thead><tbody>
+{''.join(rows)}
+</tbody></table></div>
+<dialog id="dlg"><img id="dimg" alt=""><div class="dbar"><span class="t" id="dt"></span><span id="dseeds"></span><a id="dopen" href="#" target="_blank" rel="noopener">Open the page</a><button type="button" id="dclose">Close</button></div><div class="dmeta" id="dmeta"></div></dialog>
 <script>
-const secs=[...document.querySelectorAll('section.brief')], count=document.getElementById('count');
-function upd(){{const v=secs.filter(s=>!s.hidden).length;count.textContent=v+' of '+secs.length+' briefs';}}
-document.querySelectorAll('.barin button[data-f]').forEach(b=>b.addEventListener('click',()=>{{
- document.querySelectorAll('.barin button[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===b));
- secs.forEach(s=>s.hidden=!(b.dataset.f==='all'||s.dataset.type===b.dataset.f));upd();}}));
-const dim=document.getElementById('dim');dim.addEventListener('click',()=>{{const on=dim.getAttribute('aria-pressed')!=='true';
- dim.setAttribute('aria-pressed',on);document.querySelector('main').classList.toggle('dim',on);}});
-document.querySelectorAll('.card[data-seeds]').forEach(c=>{{const seeds=JSON.parse(c.dataset.seeds);
- const show=i=>{{const s=seeds[i];c.querySelector('img').src=s.img;c.querySelector('.open').href=s.href;
-  c.querySelector('dd.f').textContent=s.font;c.querySelector('dd.m').textContent=s.met==null?'n/a':s.met+' of '+s.of;
-  const t=c.querySelector('dd.t');t.textContent=s.tells.length?s.tells.join(', '):'None found';t.classList.toggle('clean',!s.tells.length);
-  c.dataset.tells=s.tells.length;c.querySelectorAll('.switch button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.i===i));c.dataset.cur=i;}};
- c.querySelectorAll('.switch button').forEach(x=>x.addEventListener('click',()=>show(+x.dataset.i)));
- c.querySelector('.shot').addEventListener('click',()=>{{const s=seeds[+(c.dataset.cur||0)];
-  document.getElementById('dlgimg').src=s.img;document.getElementById('dlgimg').alt=c.querySelector('img').alt;
-  document.getElementById('dlgopen').href=s.href;document.getElementById('dlg').showModal();}});}});
-document.getElementById('dlgclose').addEventListener('click',()=>document.getElementById('dlg').close());
-document.getElementById('dlg').addEventListener('click',ev=>{{if(ev.target.id==='dlg')ev.target.close();}});
-upd();
+const rows=[...document.querySelectorAll('tbody tr')];
+document.querySelectorAll('.filters button[data-f]').forEach(b=>b.addEventListener('click',()=>{{
+ document.querySelectorAll('.filters button[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+ rows.forEach(r=>r.hidden=!(b.dataset.f==='all'||r.dataset.type===b.dataset.f));}}));
+const dim=document.getElementById('dim');dim.addEventListener('click',()=>{{const on=dim.getAttribute('aria-pressed')!=='true';dim.setAttribute('aria-pressed',on);document.querySelector('table').classList.toggle('dim',on);}});
+const dlg=document.getElementById('dlg');let cur=null,ci=0;
+function show(i){{const s=cur.seeds[i];ci=i;document.getElementById('dimg').src=s.img;document.getElementById('dopen').href=s.href;
+ document.getElementById('dmeta').textContent='Heading font: '+s.font+' · Brief requirements met: '+(s.met==null?'n/a':s.met+' of '+s.of)+' · Giveaways: '+(s.tells.length?s.tells.join(', '):'none');
+ document.querySelectorAll('#dseeds button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===i));}}
+document.querySelectorAll('.th').forEach(t=>t.addEventListener('click',()=>{{cur={{seeds:JSON.parse(t.dataset.seeds)}};
+ document.getElementById('dt').textContent=t.dataset.title+' · '+t.dataset.arm;document.getElementById('dimg').alt=t.dataset.title+', '+t.dataset.arm;
+ document.getElementById('dseeds').innerHTML=cur.seeds.length>1?cur.seeds.map((_,i)=>'<button type="button" data-i="'+i+'">Attempt '+(i+1)+'</button>').join(' '):'';
+ document.querySelectorAll('#dseeds button').forEach(b=>b.addEventListener('click',()=>show(+b.dataset.i)));show(0);dlg.showModal();}}));
+document.getElementById('dclose').addEventListener('click',()=>dlg.close());
+dlg.addEventListener('click',ev=>{{if(ev.target===dlg)dlg.close();}});
+document.addEventListener('keydown',ev=>{{if(!dlg.open||!cur)return;const n=cur.seeds.length;
+ if(ev.key==='ArrowRight')show((ci+1)%n);if(ev.key==='ArrowLeft')show((ci+n-1)%n);}});
 </script>
 </body></html>"""
     target = (out_dir / "gallery.html") if out_dir else (ROOT / "gallery.html")
