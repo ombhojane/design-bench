@@ -38,8 +38,8 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
     board = json.loads(BOARD.read_text()) if BOARD.exists() else {}
 
     def page_info(slug: str) -> dict | None:
-        if not (GEN / f"{slug}.html").exists():
-            return None
+        if not (GEN / f"{slug}.html").exists() or not (SCAN / "raw" / f"{slug}.json").exists():
+            return None  # only pages that were scored (same set as stats + dataset)
         raw_f = SCAN / "raw" / f"{slug}.json"
         raw = json.loads(raw_f.read_text()) if raw_f.exists() else {}
         tells = [p["id"] for p in raw.get("patterns", []) if p["triggered"] and p["id"] in validated]
@@ -76,7 +76,7 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
         rows.append(
             f'<tr data-tier="{b["group"]}"><th class="brief"><div class="bt">{html.escape(b["title"])}{held}</div>'
             f'<div class="tier">{TIER_LABEL.get(b["group"], b["group"])}</div>'
-            f'<details><summary>Brief</summary><p>{html.escape(b["brief"])}</p></details></th>'
+            f'<p class="bp" title="{html.escape(b["brief"])}">{html.escape(b["brief"])}</p></th>'
             + "".join(cells) + "</tr>")
 
     summ = board.get("summary", {})
@@ -90,7 +90,7 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
     head = "".join(f"<th>{ARM_LABEL[a]}</th>" for a in ARMS)
     out = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>design-bench</title>
+<title>design-bench: every generated page</title>
 <style>
 :root {{ --bg:#f6f5f1; --fg:#1d1d1b; --mute:#6b6a65; --line:#dedcd5; --card:#fff; --tell:#a3341f; --ok:#2f6b3a; }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{ --bg:#161614; --fg:#ecebe6; --mute:#9a9890; --line:#34332f; --card:#1f1f1c; --tell:#e8846b; --ok:#8fc59a; }} }}
@@ -113,7 +113,7 @@ th.brief {{ width:200px; vertical-align:top; text-align:left; padding:8px 10px 8
 .bt {{ font-weight:bold; }}
 .tier {{ color:var(--mute); font-size:12px; }}
 .held {{ font-size:11px; color:var(--tell); }}
-details {{ font-size:12px; color:var(--mute); }}
+.bp {{ font-size:12px; color:var(--mute); margin:4px 0 0; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }}
 td {{ vertical-align:top; padding:0 6px; }}
 .seeds {{ display:flex; gap:6px; }}
 .thumb {{ display:block; width:150px; background:var(--card); border:1px solid var(--line); border-radius:4px; overflow:hidden; color:inherit; text-decoration:none; }}
@@ -127,9 +127,9 @@ td {{ vertical-align:top; padding:0 6px; }}
 .none {{ color:var(--ok); }}
 </style></head><body>
 <header>
-<h1>design-bench: what each design skill actually produced</h1>
+<h1>Every page, side by side</h1>
 <p class="lede">One model (gpt-oss-120b) and one brief per row, so the only thing changing across columns is the design skill. There are up to 3 seeds per cell. Click any thumbnail to open the live page. Red labels are validated AI-design tells (tells@2026.12), and the percentage is how well the page met its brief. Hallmark has only 3 anecdotal pages because Groq's free daily quota ran out.</p>
-<p class="lede"><a href="https://github.com/ombhojane/design-bench">Code &amp; reports (GitHub)</a> · <a href="https://huggingface.co/datasets/ombhojane/design-bench">Dataset (Hugging Face)</a> · <a href="https://github.com/ombhojane/design-bench/blob/main/docs/REPORT-phase0.md">Phase 0: which AI-design tells are real</a> · <a href="https://github.com/ombhojane/design-bench/blob/main/docs/REPORT-phase1.md">Phase 1: do anti-slop skills work</a></p>
+<p class="lede"><a href="./">← Findings and method</a> · <a href="https://huggingface.co/datasets/ombhojane/design-bench">Dataset</a> · <a href="https://github.com/ombhojane/design-bench">Code</a></p>
 <table class="stats"><tr><th>Arm</th><th>Tells, neutral briefs</th><th>Tells, all</th><th>Adherence</th><th>Font entropy</th><th>Top heading fonts</th></tr>{stat_rows}</table>
 <div class="controls">
 <button data-f="all" class="on">All tiers</button><button data-f="neutral">Neutral</button>
@@ -148,7 +148,7 @@ let only=false;document.getElementById('onlyTells').onclick=e=>{{only=!only;e.ta
  document.querySelectorAll('a.thumb').forEach(a=>{{a.style.opacity=(only&&a.dataset.tells==='0')?'0.15':'';}});}};
 </script>
 </body></html>"""
-    target = (out_dir / "index.html") if out_dir else (ROOT / "gallery.html")
+    target = (out_dir / "gallery.html") if out_dir else (ROOT / "gallery.html")
     target.write_text(out)
     n = sum(1 for _ in GEN.glob("*.html"))
     print(f"gallery.html written: {len(briefs)} briefs x {len(ARMS)} arms, {n} pages")
@@ -168,11 +168,10 @@ if __name__ == "__main__":
                and json.loads(l).get("split") == "public"}
         n = 0
         for f in GEN.glob("*.html"):
-            if f.stem.split("__")[0] in pub:
+            s = SCAN / "screenshots" / f"{f.stem}.png"
+            if f.stem.split("__")[0] in pub and s.exists() and (SCAN / "raw" / f"{f.stem}.json").exists():
                 shutil.copyfile(f, site / "pages" / f.name)
-                s = SCAN / "screenshots" / f"{f.stem}.png"
-                if s.exists():
-                    shutil.copyfile(s, site / "shots" / s.name)
+                shutil.copyfile(s, site / "shots" / s.name)
                 n += 1
         main(public=True, out_dir=site)
         print(f"public site: {n} pages")
