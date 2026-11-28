@@ -62,7 +62,10 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
                  if p["triggered"] and p["id"] in validated]
         a_f = ASSERT / f"{slug}.json"
         adh = json.loads(a_f.read_text()) if a_f.exists() else {}
+        meta_f = GEN / f"{slug}.json"
+        model = json.loads(meta_f.read_text()).get("model", "openai/gpt-oss-120b") if meta_f.exists() else "openai/gpt-oss-120b"
         return {"img": f"{shot_prefix}/{slug}.png", "href": f"{gen_prefix}/{slug}.html",
+                "model": model.split("/")[-1],
                 "font": (raw.get("fonts") or {}).get("headingFont") or "unknown",
                 "met": adh.get("passed"), "of": adh.get("checked"), "tells": tells}
 
@@ -92,7 +95,8 @@ def main(public: bool = False, out_dir: Path | None = None) -> None:
                 f'<td data-tells="{nt}"><button type="button" class="th" data-seeds="{e(json.dumps(seeds))}" '
                 f'data-title="{e(b["title"])}" data-arm="{e(ARM_LABEL[arm])}" aria-label="{e(b["title"])}, {e(ARM_LABEL[arm])}">'
                 f'<img loading="lazy" src="{f["img"]}" alt=""></button>'
-                f'<span class="m">{e(f["font"])} · <span class="{"ok" if nt == 0 else "bad"}">{gv}</span></span></td>')
+                f'<span class="m">{e(f["font"])} · <span class="{"ok" if nt == 0 else "bad"}">{gv}</span>'
+                f'{"" if f["model"] == "gpt-oss-120b" else " · " + e(f["model"])}</span></td>')
         rows.append(
             f'<tr data-type="{b["group"]}"><th scope="row"><span class="bt" title="{e(b["brief"])}">{e(b["title"])}</span>'
             f'<span class="ty">{TYPE_LABEL.get(b["group"], b["group"])}</span></th>{"".join(cells)}</tr>')
@@ -153,7 +157,7 @@ dialog img {{ display:block; width:100%; height:auto; }}
 <header>
 <a href="./">← Findings and method</a>
 <h1>Every page</h1>
-<p class="lede">Each row is one website brief and each column one set of design instructions. Thumbnails show the first of three attempts; click one to see it full size and flip through all three. Hover a brief's name to read it.{note}</p>
+<p class="lede">Each row is one website brief and each column one set of design instructions. Thumbnails show the first of three attempts; click one to see it full size and flip through all three. Hover a brief's name to read it. Pages were made by gpt-oss-120b unless marked gpt-5-mini.{note}</p>
 <div class="filters" role="toolbar" aria-label="Filter"><button type="button" data-f="all" aria-pressed="true">All briefs</button>{filters}<button type="button" id="dim" aria-pressed="false">Fade pages with no giveaways</button></div>
 </header>
 <div class="wrap"><table><thead><tr><th scope="col">Brief</th>{head}</tr></thead><tbody>
@@ -168,7 +172,7 @@ document.querySelectorAll('.filters button[data-f]').forEach(b=>b.addEventListen
 const dim=document.getElementById('dim');dim.addEventListener('click',()=>{{const on=dim.getAttribute('aria-pressed')!=='true';dim.setAttribute('aria-pressed',on);document.querySelector('table').classList.toggle('dim',on);}});
 const dlg=document.getElementById('dlg');let cur=null,ci=0;
 function show(i){{const s=cur.seeds[i];ci=i;document.getElementById('dimg').src=s.img;document.getElementById('dopen').href=s.href;
- document.getElementById('dmeta').textContent='Heading font: '+s.font+' · Brief requirements met: '+(s.met==null?'n/a':s.met+' of '+s.of)+' · Giveaways: '+(s.tells.length?s.tells.join(', '):'none');
+ document.getElementById('dmeta').textContent='Model: '+s.model+' · Heading font: '+s.font+' · Brief requirements met: '+(s.met==null?'n/a':s.met+' of '+s.of)+' · Giveaways: '+(s.tells.length?s.tells.join(', '):'none');
  document.querySelectorAll('#dseeds button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===i));}}
 document.querySelectorAll('.th').forEach(t=>t.addEventListener('click',()=>{{cur={{seeds:JSON.parse(t.dataset.seeds)}};
  document.getElementById('dt').textContent=t.dataset.title+' · '+t.dataset.arm;document.getElementById('dimg').alt=t.dataset.title+', '+t.dataset.arm;
